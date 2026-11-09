@@ -13,6 +13,7 @@ import org.bukkit.block.BlockFace;
 import org.bukkit.block.data.BlockData;
 import org.bukkit.block.data.Directional;
 import org.bukkit.block.data.type.Snow;
+import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
@@ -329,15 +330,15 @@ public class DexUtils {
 	
 	public static Location deserializeLocation(FileConfiguration config, String dir) {
 		String id = "%%__USER__%%, %%__RESOURCE__%%, %%__NONCE__%%";
-		if (config.get(dir) == null) return null;
+		ConfigurationSection section = config.getConfigurationSection(dir);
+		if (section == null) return null;
 		
-		double x = config.getDouble(dir + ".x");
-		double y = config.getDouble(dir + ".y");
-		double z = config.getDouble(dir + ".z");
-		double yaw = config.getDouble(dir + ".yaw");
-		double pitch = config.getDouble(dir + ".pitch");
-		String world = config.getString(dir + ".world");
-		return new Location(Bukkit.getWorld(world), x, y, z, (float) yaw, (float) pitch);
+		//Location.serialize() writes "world" up to mc 26.2 and "world_key" from 26.3, Location.deserialize reads both
+		try {
+			return Location.deserialize(section.getValues(false));
+		} catch (IllegalArgumentException ex) { //the world is not loaded
+			return null;
+		}
 	}
 	
 	public static Vector getBlockDimensions(BlockData b) {
